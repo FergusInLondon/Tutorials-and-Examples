@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>Multi-Stage Docker Builds for Golang</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+    <ul class="sections">
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              <h1 id="multi-stage-docker-builds-for-golang">Multi-Stage Docker Builds for Golang</h1>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>Docker is awesome, and once you get your head around it - it’s also pretty simple. You know what else is awesome though? Docker multi-stage builds. And guess what? They’re pretty simple themselves..</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>Essentially, you just write two <code>Dockerfile</code>s in one actual <code>Dockerfile</code>. Sound a bit odd? Here’s a worked example..</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <h2 id="stage-1-the-build-container">Stage 1: The Build Container</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>The first stage is quite obvious: we need to define a container that is capable of actually building an executable from our source code.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>As we’re using Go, the natural choice is to use the the official golang image - specifically the lightweight <code>alpine</code> based one which contains all the  Go build tools.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">FROM</span> golang:alpine</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>The <code>$GOPATH</code> for this image is set to <code>/usr/src</code>, so we’ll set our working directory to <code>/usr/src/app</code> and then copy our source code here. </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">WORKDIR</span><span class="bash"> /usr/src/app
+</span><span class="hljs-keyword">COPY</span><span class="bash"> . .
+</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>Next up we’ll build our executable, this is as simple as running <code>go build</code> - just as you would normally. We’ll set our output executable to be called <code>MultiStageExample</code>: we’ll need this later. </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">RUN</span><span class="bash"> go build -v -o MultiStageExample
+</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <h2 id="stage-2-the-distributable-container">Stage 2: The Distributable Container</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p>Once we’ve built our executable, we need to create the actual image that we can distribute and deploy.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <p>We’re opting to use <code>alpine</code> as a base image again, due to it’s small size. This is more important for this stage, as this is the image we’ll actually deploy/push.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">FROM</span> alpine
+<span class="hljs-keyword">MAINTAINER</span> Fergus In London &lt;fergus@fergus.london&gt;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-13">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <p>Set our working directory and… <strong>bang, here’s the magic</strong>. By utilising <code>--from=0 [directory/file]</code> with the <code>COPY</code> directive, we’re able to instruct Docker that we want to copy a file <em>from the initial (i.e 0) container</em>. This is genuinely all the magic there is to a multi-stage build using Docker! Pretty neat, huh? </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">WORKDIR</span><span class="bash"> /var/app/example
+</span><span class="hljs-keyword">COPY</span><span class="bash"> --from=0 /usr/src/app/MultiStageExample .
+</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-14">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+              <p>Lastly - and just like any other Docker image - we ensure that our target file is actually executable (<code>chmod +x ..</code>), and we set it as the image entrypoint. Easy.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">RUN</span><span class="bash"> chmod +x MultiStageExample
+</span><span class="hljs-keyword">ENTRYPOINT</span><span class="bash"> [<span class="hljs-string">"/var/app/example/MultiStageExample"</span>]
+</span></pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>

@@ -1,0 +1,13 @@
+status:
+  - code: -1
+    message: "Operation Failed"
+  - code: 1
+    message: "Operation Accepted"
+  - code: 2
+    message: "Operation Queued"
+  - code: 3
+    message: "Operation Pending"
+  - code: 4
+    message: "Operation Processing"
+  - code: 5
+    message: "Operation Success"
